@@ -3,17 +3,16 @@ Fastapi router file.
 
 Author: tigerding
 Email: zhiyuanding01@gmail.com
-Version: 0.3.0
+Version: 0.3.1
 """
 
 from fastapi import APIRouter, HTTPException, status
-from fastapi.responses import PlainTextResponse
 from datetime import datetime
-from io import StringIO
 from pydantic import ValidationError
 
 from robot import yahoo
 from models.history import Period, Type, StockPriceRecord
+from utils import forge_csv_response
 
 router = APIRouter()
 
@@ -77,45 +76,18 @@ async def get_history(
                 status.HTTP_500_INTERNAL_SERVER_ERROR, f"Internal Server Error: {e}"
             )
 
-    # plain text response
-    csv_buffer = StringIO()
-    df.to_csv(csv_buffer)
-    response = PlainTextResponse(csv_buffer.getvalue())
-
-    # if csv, download text as attachment
-    if type is Type.CSV:
-        response.headers["Content-Disposition"] = f"attachment; filename={ticker}.csv"
-
-    return response
+    return forge_csv_response(df, is_file=type is Type.CSV, filename=ticker)
 
 
 # todo: integration with frontend model
 @router.get("/income/{ticker}", response_model=str)
 async def get_income_statement(ticker: str, file: bool = False):
     df = yahoo.get_income_statement(ticker)
-    csv_buffer = StringIO()
-    df.to_csv(csv_buffer)
-    response = PlainTextResponse(csv_buffer.getvalue())
-
-    if file:
-        response.headers["Content-Disposition"] = (
-            f"attachment; filename={ticker}_income_statement.csv"
-        )
-
-    return response
+    return forge_csv_response(df, is_file=file, filename=f"{ticker}_income_statement")
 
 
 # todo: integration with frontend model
 @router.get("/cashflow/{ticker}", response_model=str)
 async def get_cashflow_statement(ticker: str, file: bool = False):
     df = yahoo.get_cashflow_statement(ticker)
-    csv_buffer = StringIO()
-    df.to_csv(csv_buffer)
-    response = PlainTextResponse(csv_buffer.getvalue())
-
-    if file:
-        response.headers["Content-Disposition"] = (
-            f"attachment; filename={ticker}_cashflow_statement.csv"
-        )
-
-    return response
+    return forge_csv_response(df, is_file=file, filename=f"{ticker}_cashflow_statement")
