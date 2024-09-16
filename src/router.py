@@ -12,7 +12,7 @@ from pydantic import ValidationError
 
 from robot import yahoo
 from models.history import Period, ResponseType, StockPriceRecord
-from models.statements import StatementType
+from models.financials import StatementType
 from utils import forge_csv_response
 
 router = APIRouter()

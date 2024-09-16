@@ -1,5 +1,5 @@
 """
-Statements APIs related models.
+Financials APIs related models.
 
 Author: tigerding
 Email: zhiyuanding01@gmail.com

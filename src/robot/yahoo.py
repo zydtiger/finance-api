@@ -11,7 +11,7 @@ import pandas as pd
 from datetime import datetime
 
 from models.history import Period
-from models.statements import StatementType
+from models.financials import StatementType
 
 
 def get_history(
