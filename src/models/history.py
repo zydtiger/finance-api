@@ -29,7 +29,7 @@ class Period(Enum):
     MAX = "max"
 
 
-class Type(Enum):
+class ResponseType(Enum):
     """
     Valid return types for historical data.
     """

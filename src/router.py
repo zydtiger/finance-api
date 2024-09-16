@@ -11,7 +11,7 @@ from datetime import datetime
 from pydantic import ValidationError
 
 from robot import yahoo
-from models.history import Period, Type, StockPriceRecord
+from models.history import Period, ResponseType, StockPriceRecord
 from utils import forge_csv_response
 
 router = APIRouter()
@@ -23,7 +23,7 @@ async def get_history(
     start: str | None = None,
     end: str | None = None,
     period: Period | None = None,
-    type: Type = Type.PLAIN,
+    type: ResponseType = ResponseType.PLAIN,
 ):
     if start is not None and end is not None and period is not None:
         raise HTTPException(
@@ -54,7 +54,7 @@ async def get_history(
         )
 
     # if model, convert dataframe to list[model]
-    if type is Type.MODEL:
+    if type is ResponseType.MODEL:
         df.reset_index(inplace=True)
         df.rename(
             columns={
@@ -76,7 +76,7 @@ async def get_history(
                 status.HTTP_500_INTERNAL_SERVER_ERROR, f"Internal Server Error: {e}"
             )
 
-    return forge_csv_response(df, is_file=type is Type.CSV, filename=ticker)
+    return forge_csv_response(df, is_file=type is ResponseType.CSV, filename=ticker)
 
 
 # todo: integration with frontend model
