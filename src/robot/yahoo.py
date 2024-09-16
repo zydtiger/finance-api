@@ -3,7 +3,7 @@ Yahoo backend implemeneted with yfinance.
 
 Author: tigerding
 Email: zhiyuanding01@gmail.com
-Version: 0.1.0
+Version: 0.2.0
 """
 
 import yfinance as yf
@@ -39,3 +39,19 @@ def get_history(
         end=end,
         raise_errors=True,
     )
+
+
+def get_income_statement(ticker: str) -> pd.DataFrame:
+    """
+    Gets income statement for ticker.
+
+    Args:
+        ticker (str): stock ticker symbol
+
+    Returns:
+        pd.DataFrame: pandas DataFrame of income statement in the same order as on Yahoo
+    """
+
+    # adapter of yahoo finance
+    income_df = yf.Ticker(ticker).income_stmt
+    return income_df.iloc[::-1, ::-1]  # reverse rows and columns

@@ -3,7 +3,7 @@ Fastapi router file.
 
 Author: tigerding
 Email: zhiyuanding01@gmail.com
-Version: 0.1.1
+Version: 0.2.0
 """
 
 from fastapi import APIRouter, HTTPException, status
@@ -85,5 +85,21 @@ async def get_history(
     # if csv, download text as attachment
     if type is Type.CSV:
         response.headers["Content-Disposition"] = f"attachment; filename={ticker}.csv"
+
+    return response
+
+
+# todo: integration with frontend model
+@router.get("/income/{ticker}", response_model=str)
+async def get_income_statement(ticker: str, file: bool = False):
+    df = yahoo.get_income_statement(ticker)
+    csv_buffer = StringIO()
+    df.to_csv(csv_buffer)
+    response = PlainTextResponse(csv_buffer.getvalue())
+
+    if file:
+        response.headers["Content-Disposition"] = (
+            f"attachment; filename={ticker}_income_statement.csv"
+        )
 
     return response
