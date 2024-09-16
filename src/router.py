@@ -3,7 +3,7 @@ Fastapi router file.
 
 Author: tigerding
 Email: zhiyuanding01@gmail.com
-Version: 0.4.1
+Version: 0.5.0
 """
 
 from fastapi import APIRouter, HTTPException, status
@@ -105,3 +105,9 @@ async def get_balance_sheet(
 ):
     df = yahoo.get_cashflow_statement(ticker, type)
     return forge_csv_response(df, is_file=file, filename=f"{ticker}_balance_sheet")
+
+
+# todo: integration with frontend model
+@router.get("/calendar/{ticker}", response_model=dict)
+async def get_calendar(ticker: str):
+    return yahoo.get_calendar(ticker)
