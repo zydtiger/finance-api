@@ -3,7 +3,7 @@ Yahoo backend implemeneted with yfinance.
 
 Author: tigerding
 Email: zhiyuanding01@gmail.com
-Version: 0.4.0
+Version: 0.4.1
 """
 
 import yfinance as yf
@@ -11,6 +11,7 @@ import pandas as pd
 from datetime import datetime
 
 from models.history import Period
+from models.statements import StatementType
 
 
 def get_history(
@@ -41,7 +42,7 @@ def get_history(
     )
 
 
-def get_income_statement(ticker: str) -> pd.DataFrame:
+def get_income_statement(ticker: str, type: StatementType) -> pd.DataFrame:
     """
     Gets income statement for ticker.
 
@@ -53,11 +54,15 @@ def get_income_statement(ticker: str) -> pd.DataFrame:
     """
 
     # adapter of yahoo finance
-    income_df = yf.Ticker(ticker).income_stmt
+    income_df = (
+        yf.Ticker(ticker).income_stmt
+        if type is StatementType.YEARLY
+        else yf.Ticker(ticker).quarterly_income_stmt
+    )
     return income_df.iloc[::-1, ::-1]  # reverse rows and columns
 
 
-def get_cashflow_statement(ticker: str) -> pd.DataFrame:
+def get_cashflow_statement(ticker: str, type: StatementType) -> pd.DataFrame:
     """
     Gets cash flow statement for ticker.
 
@@ -69,11 +74,15 @@ def get_cashflow_statement(ticker: str) -> pd.DataFrame:
     """
 
     # adapter of yahoo finance
-    cashflow_df = yf.Ticker(ticker).cashflow
+    cashflow_df = (
+        yf.Ticker(ticker).cashflow
+        if type is StatementType.YEARLY
+        else yf.Ticker(ticker).quarterly_cashflow
+    )
     return cashflow_df.iloc[::-1, ::-1]
 
 
-def get_balance_sheet(ticker: str) -> pd.DataFrame:
+def get_balance_sheet(ticker: str, type: StatementType) -> pd.DataFrame:
     """
     Gets balance sheet for ticker.
 
@@ -85,5 +94,9 @@ def get_balance_sheet(ticker: str) -> pd.DataFrame:
     """
 
     # adapter of yahoo finance
-    balance_df = yf.Ticker(ticker).balance_sheet
+    balance_df = (
+        yf.Ticker(ticker).balance_sheet
+        if type is StatementType.YEARLY
+        else yf.Ticker(ticker).quarterly_balance_sheet
+    )
     return balance_df.iloc[::-1, ::-1]

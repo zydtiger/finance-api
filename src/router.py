@@ -3,7 +3,7 @@ Fastapi router file.
 
 Author: tigerding
 Email: zhiyuanding01@gmail.com
-Version: 0.4.0
+Version: 0.4.1
 """
 
 from fastapi import APIRouter, HTTPException, status
@@ -12,6 +12,7 @@ from pydantic import ValidationError
 
 from robot import yahoo
 from models.history import Period, ResponseType, StockPriceRecord
+from models.statements import StatementType
 from utils import forge_csv_response
 
 router = APIRouter()
@@ -81,20 +82,26 @@ async def get_history(
 
 # todo: integration with frontend model
 @router.get("/income/{ticker}", response_model=str)
-async def get_income_statement(ticker: str, file: bool = False):
-    df = yahoo.get_income_statement(ticker)
+async def get_income_statement(
+    ticker: str, type: StatementType = StatementType.YEARLY, file: bool = False
+):
+    df = yahoo.get_income_statement(ticker, type)
     return forge_csv_response(df, is_file=file, filename=f"{ticker}_income_statement")
 
 
 # todo: integration with frontend model
 @router.get("/cashflow/{ticker}", response_model=str)
-async def get_cashflow_statement(ticker: str, file: bool = False):
-    df = yahoo.get_cashflow_statement(ticker)
+async def get_cashflow_statement(
+    ticker: str, type: StatementType = StatementType.YEARLY, file: bool = False
+):
+    df = yahoo.get_cashflow_statement(ticker, type)
     return forge_csv_response(df, is_file=file, filename=f"{ticker}_cashflow_statement")
 
 
 # todo: integration with frontend model
 @router.get("/balance/{ticker}", response_model=str)
-async def get_balance_sheet(ticker: str, file: bool = False):
-    df = yahoo.get_cashflow_statement(ticker)
+async def get_balance_sheet(
+    ticker: str, type: StatementType = StatementType.YEARLY, file: bool = False
+):
+    df = yahoo.get_cashflow_statement(ticker, type)
     return forge_csv_response(df, is_file=file, filename=f"{ticker}_balance_sheet")
