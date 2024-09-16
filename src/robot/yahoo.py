@@ -3,7 +3,7 @@ Yahoo backend implemeneted with yfinance.
 
 Author: tigerding
 Email: zhiyuanding01@gmail.com
-Version: 0.3.0
+Version: 0.4.0
 """
 
 import yfinance as yf
@@ -65,9 +65,25 @@ def get_cashflow_statement(ticker: str) -> pd.DataFrame:
         ticker (str): stock ticker symbol
 
     Returns:
-        pd.DataFrame: pandas DataFrame of cashflow statement in the same order as on Yahoo
+        pd.DataFrame: pandas DataFrame of cash flow statement in the same order as on Yahoo
     """
 
     # adapter of yahoo finance
     cashflow_df = yf.Ticker(ticker).cashflow
     return cashflow_df.iloc[::-1, ::-1]
+
+
+def get_balance_sheet(ticker: str) -> pd.DataFrame:
+    """
+    Gets balance sheet for ticker.
+
+    Args:
+        ticker (str): stock ticker symbol
+
+    Returns:
+        pd.DataFrame: pandas DataFrame of balance sheet in the same order as on Yahoo
+    """
+
+    # adapter of yahoo finance
+    balance_df = yf.Ticker(ticker).balance_sheet
+    return balance_df.iloc[::-1, ::-1]
