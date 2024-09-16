@@ -10,6 +10,7 @@ from fastapi import APIRouter, HTTPException, status
 from fastapi.responses import PlainTextResponse
 from datetime import datetime
 from io import StringIO
+from pydantic import ValidationError
 
 from robot import yahoo
 from models.history import Period, Type, StockPriceRecord
@@ -67,9 +68,14 @@ async def get_history(
             },
             inplace=True,
         )
-        return list(
-            map(lambda row: StockPriceRecord(**row[1].to_dict()), df.iterrows())
-        )
+        try:
+            return list(
+                map(lambda row: StockPriceRecord(**row[1].to_dict()), df.iterrows())
+            )
+        except ValidationError as e:
+            raise HTTPException(
+                status.HTTP_500_INTERNAL_SERVER_ERROR, f"Internal Server Error: {e}"
+            )
 
     # plain text response
     csv_buffer = StringIO()
