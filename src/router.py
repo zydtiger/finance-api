@@ -3,7 +3,7 @@ Fastapi router file.
 
 Author: tigerding
 Email: zhiyuanding01@gmail.com
-Version: 0.1.0
+Version: 0.1.1
 """
 
 from fastapi import APIRouter, HTTPException, status
@@ -12,17 +12,18 @@ from datetime import datetime
 from io import StringIO
 
 from robot import yahoo
-from models.history import Period
+from models.history import Period, Type, StockPriceRecord
 
 router = APIRouter()
 
 
-@router.get("/history/{ticker}")
+@router.get("/history/{ticker}", response_model=list[StockPriceRecord] | str)
 async def get_history(
     ticker: str,
     start: str | None = None,
     end: str | None = None,
     period: Period | None = None,
+    type: Type = Type.PLAIN,
 ):
     if start is not None and end is not None and period is not None:
         raise HTTPException(
@@ -46,11 +47,37 @@ async def get_history(
 
     try:
         df = yahoo.get_history(ticker, start=start_date, end=end_date, period=period)
-        csv_buffer = StringIO()
-        df.to_csv(csv_buffer)
-        return PlainTextResponse(csv_buffer.getvalue())
     except Exception as e:
         raise HTTPException(
             status.HTTP_500_INTERNAL_SERVER_ERROR,
             f"Historical data triggered internal error: {e}",
         )
+
+    # if model, convert dataframe to list[model]
+    if type is Type.MODEL:
+        df.reset_index(inplace=True)
+        df.rename(
+            columns={
+                "Date": "date",
+                "Open": "open",
+                "High": "high",
+                "Low": "low",
+                "Close": "close",
+                "Volume": "volume",
+            },
+            inplace=True,
+        )
+        return list(
+            map(lambda row: StockPriceRecord(**row[1].to_dict()), df.iterrows())
+        )
+
+    # plain text response
+    csv_buffer = StringIO()
+    df.to_csv(csv_buffer)
+    response = PlainTextResponse(csv_buffer.getvalue())
+
+    # if csv, download text as attachment
+    if type is Type.CSV:
+        response.headers["Content-Disposition"] = f"attachment; filename={ticker}.csv"
+
+    return response
