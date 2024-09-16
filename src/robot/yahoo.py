@@ -65,7 +65,7 @@ def get_cashflow_statement(ticker: str) -> pd.DataFrame:
         ticker (str): stock ticker symbol
 
     Returns:
-        pd.DataFrame: pandas DataFrame of income statement in the same order as on Yahoo
+        pd.DataFrame: pandas DataFrame of cashflow statement in the same order as on Yahoo
     """
 
     # adapter of yahoo finance
