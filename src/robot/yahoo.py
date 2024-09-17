@@ -3,7 +3,7 @@ Yahoo backend implemeneted with yfinance.
 
 Author: tigerding
 Email: zhiyuanding01@gmail.com
-Version: 0.5.0
+Version: 0.6.0
 """
 
 import yfinance as yf
@@ -115,3 +115,27 @@ def get_calendar(ticker: str) -> dict:
     """
 
     return yf.Ticker(ticker).calendar
+
+
+def get_sec_filings(ticker: str) -> pd.DataFrame:
+    """
+    Gets SEC filings for stock.
+
+    Args:
+        ticker (str): stock ticker symbol
+
+    Returns:
+        pd.DataFrame: pandas DataFrame of SEC filings
+    """
+
+    sec_filings = yf.Ticker(ticker).sec_filings
+    sec_filings_parsable = [
+        {
+            "Date": filing["date"],
+            "Type": filing["type"],
+            "Title": filing["title"],
+            "Link": filing["edgarUrl"],
+        }
+        for filing in sec_filings
+    ]
+    return pd.DataFrame(sec_filings_parsable)

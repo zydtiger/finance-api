@@ -3,7 +3,7 @@ Fastapi router file.
 
 Author: tigerding
 Email: zhiyuanding01@gmail.com
-Version: 0.5.0
+Version: 0.6.0
 """
 
 from fastapi import APIRouter, HTTPException, status
@@ -11,8 +11,9 @@ from datetime import datetime
 from pydantic import ValidationError
 
 from robot import yahoo
-from models.history import Period, ResponseType, StockPriceRecord
-from models.financials import StatementType
+from models import ResponseType
+from models.history import Period, StockPriceRecord
+from models.financials import StatementType, SECFilingRecord
 from utils import forge_csv_response
 
 router = APIRouter()
@@ -111,3 +112,30 @@ async def get_balance_sheet(
 @router.get("/calendar/{ticker}", response_model=dict)
 async def get_calendar(ticker: str):
     return yahoo.get_calendar(ticker)
+
+
+@router.get("/sec/{ticker}", response_model=list[SECFilingRecord] | str)
+async def get_sec_filings(ticker: str, type: ResponseType = ResponseType.PLAIN):
+    df = yahoo.get_sec_filings(ticker)
+
+    # if model, convert dataframe to list[model]
+    if type is ResponseType.MODEL:
+        df.rename(
+            columns={
+                "Date": "date",
+                "Type": "type",
+                "Title": "title",
+                "Link": "link",
+            },
+            inplace=True,
+        )
+        try:
+            return [SECFilingRecord(**row.to_dict()) for _index, row in df.iterrows()]
+        except ValidationError as e:
+            raise HTTPException(
+                status.HTTP_500_INTERNAL_SERVER_ERROR, f"Internal Server Error: {e}"
+            )
+
+    return forge_csv_response(
+        df, is_file=type is ResponseType.CSV, filename=f"{ticker}_sec_filings"
+    )
