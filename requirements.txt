@@ -1,4 +1,4 @@
-fastapi==0.114.2
+fastapi[standard]==0.114.2
 pandas==2.2.2
 yfinance==0.2.43
 pydantic==2.9.1
