@@ -29,16 +29,6 @@ class Period(Enum):
     MAX = "max"
 
 
-class ResponseType(Enum):
-    """
-    Valid return types for historical data.
-    """
-
-    PLAIN = "plain"
-    CSV = "csv"
-    MODEL = "model"
-
-
 class StockPriceRecord(BaseModel):
     """
     Stock price record type, matches frontend.
