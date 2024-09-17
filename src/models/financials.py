@@ -20,7 +20,7 @@ class StatementType(Enum):
     YEARLY = "yearly"
 
 
-class SECFilingType(BaseModel):
+class SECFilingRecord(BaseModel):
     """
     SEC filing model.
     """
