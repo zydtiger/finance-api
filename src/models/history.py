@@ -40,6 +40,10 @@ class ResponseType(Enum):
 
 
 class StockPriceRecord(BaseModel):
+    """
+    Stock price record type, matches frontend.
+    """
+
     date: datetime
     open: float
     high: float
