@@ -16,4 +16,4 @@ COPY ./src /app/src
 EXPOSE 3000
 
 # Command to boot the FastAPI app
-CMD ["fastapi", "run", "src/app.py", "--port", "3000"]
+CMD ["fastapi", "run", "src/app.py", "--port", "3000", "--root-path", "/api"]
