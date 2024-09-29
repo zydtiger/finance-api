@@ -3,17 +3,20 @@ Fastapi router file.
 
 Author: tigerding
 Email: zhiyuanding01@gmail.com
-Version: 0.6.0
+Version: 0.7.0
 """
 
 from fastapi import APIRouter, HTTPException, status
 from datetime import datetime
 from pydantic import ValidationError
 
-from robot import yahoo
+from robot import yahoo, finviz
+from robot.finviz import ElementNotFoundError
+
 from models import ResponseType
 from models.history import Period, StockPriceRecord
-from models.financials import StatementType, SECFilingRecord
+from models.financials import StatementType, SECFilingRecord, TagInfo
+
 from utils import forge_csv_response
 
 router = APIRouter()
@@ -57,6 +60,8 @@ async def get_history(
 
     # if model, convert dataframe to list[model]
     if type is ResponseType.MODEL:
+        # use number as index instead of date
+        # so date can be parsed in row
         df.reset_index(inplace=True)
         df.rename(
             columns={
@@ -138,4 +143,33 @@ async def get_sec_filings(ticker: str, type: ResponseType = ResponseType.PLAIN):
 
     return forge_csv_response(
         df, is_file=type is ResponseType.CSV, filename=f"{ticker}_sec_filings"
+    )
+
+
+@router.get("/tags/{ticker}", response_model=list[TagInfo] | str)
+async def get_tags(ticker: str, type: ResponseType = ResponseType.PLAIN):
+    try:
+        df = finviz.get_tags(ticker)
+    except ElementNotFoundError as e:
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR, f"Inernal Server Error: {e}"
+        )
+
+    if type is ResponseType.MODEL:
+        try:
+            df.rename(
+                columns={
+                    "Name": "name",
+                    "Link": "link",
+                },
+                inplace=True,
+            )
+            return [TagInfo(**row.to_dict()) for _index, row in df.iterrows()]
+        except ValidationError as e:
+            raise HTTPException(
+                status.HTTP_500_INTERNAL_SERVER_ERROR, f"Internal Server Error: {e}"
+            )
+
+    return forge_csv_response(
+        df, is_file=type is ResponseType.CSV, filename=f"{ticker}_tags"
     )

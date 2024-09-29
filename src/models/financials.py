@@ -3,11 +3,11 @@ Financials APIs related models.
 
 Author: tigerding
 Email: zhiyuanding01@gmail.com
-Version: 0.1.1
+Version: 0.1.2
 """
 
 from enum import Enum
-from pydantic import BaseModel, HttpUrl
+from pydantic import BaseModel, Field, HttpUrl
 from datetime import datetime
 
 
@@ -28,4 +28,13 @@ class SECFilingRecord(BaseModel):
     date: datetime
     type: str
     title: str
+    link: HttpUrl
+
+
+class TagInfo(BaseModel):
+    """
+    Tag model for stocks.
+    """
+
+    name: str
     link: HttpUrl
