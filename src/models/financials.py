@@ -53,7 +53,7 @@ class StockMetaInfo(BaseModel):
     employees: int  # fullTimeEmployees
     dividend_rate: float  # dividendRate
     price_to_book: float  # priceToBook
-    pirce_to_earning_ttm: float  # trailingPE
+    price_to_earning_ttm: float  # trailingPE
     eps_ttm: float  # trailingEps
     market_cap: int  # marketCap
     fiftytwo_week_low: float  # fiftyTwoWeekLow
@@ -66,7 +66,7 @@ class StockMetaInfo(BaseModel):
     net_profit_margins: float  # profitMargins
 
     # finviz
-    index_partipation: list[str]  # Index
+    index_participation: list[str]  # Index
     eps_yearly_growth: float  # EPS Y/Y TTM
     eps_quarterly_growth: float  # EPS Q/Q
     eps_surprise: float  # EPS Surprise
