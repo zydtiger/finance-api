@@ -47,7 +47,7 @@ class StockMetaInfo(BaseModel):
 
     # yahoo
     ticker: str  # symbol
-    name: str  # longName
+    full_name: str  # longName
     exchange: str  # exchange
     summary: str  # longBusinessSummary
     employees: int  # fullTimeEmployees

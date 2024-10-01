@@ -154,7 +154,7 @@ def get_partial_metainfo_yahoo(ticker: str) -> pd.DataFrame:
     metainfo_yf = yf.Ticker(ticker).info
     metainfo_dict = {
         "Ticker": metainfo_yf["symbol"],
-        "Name": metainfo_yf["longName"],
+        "Full Name": metainfo_yf["longName"],
         "Exchange": metainfo_yf["exchange"],
         "Summary": metainfo_yf["longBusinessSummary"],
         "Employees": metainfo_yf["fullTimeEmployees"],
