@@ -113,12 +113,6 @@ async def get_balance_sheet(
     return forge_csv_response(df, is_file=file, filename=f"{ticker}_balance_sheet")
 
 
-# todo: integration with frontend model
-@router.get("/calendar/{ticker}", response_model=dict)
-async def get_calendar(ticker: str):
-    return yahoo.get_calendar(ticker)
-
-
 @router.get("/sec/{ticker}", response_model=list[SECFilingRecord] | str)
 async def get_sec_filings(ticker: str, type: ResponseType = ResponseType.PLAIN):
     df = yahoo.get_sec_filings(ticker)

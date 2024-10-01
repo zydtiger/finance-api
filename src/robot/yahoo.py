@@ -102,21 +102,6 @@ def get_balance_sheet(ticker: str, type: StatementType) -> pd.DataFrame:
     return balance_df.iloc[::-1, ::-1]
 
 
-def get_calendar(ticker: str) -> dict:
-    """
-    Gets calendar events for stock.
-
-    Args:
-        ticker (str): stock ticker symbol
-
-    Returns:
-        todo: dict needs to be outlined in pydantic model
-        dict: calendar events in name: value format
-    """
-
-    return yf.Ticker(ticker).calendar
-
-
 def get_sec_filings(ticker: str) -> pd.DataFrame:
     """
     Gets SEC filings for stock.
