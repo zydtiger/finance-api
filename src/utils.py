@@ -3,7 +3,7 @@ Utilities file.
 
 Author: tigerding
 Email: zhiyuanding01@gmail.com
-Version: 0.1.0
+Version: 0.1.1
 """
 
 import pandas as pd
@@ -24,3 +24,17 @@ def forge_csv_response(
         response.headers["Content-Disposition"] = f"attachment; filename={filename}.csv"
 
     return response
+
+
+def convert_keys(keys: list[str]) -> list[str]:
+    """
+    Convert keys to lowercase and replace whitespaces with underlines.
+    """
+
+    converted_keys = []
+    for key in keys:
+        converted_keys.append(
+            key.lower().replace(" ", "_").replace("(", "").replace(")", "")
+        )
+
+    return converted_keys

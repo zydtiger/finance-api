@@ -3,7 +3,7 @@ Fastapi router file.
 
 Author: tigerding
 Email: zhiyuanding01@gmail.com
-Version: 0.7.0
+Version: 0.8.0
 """
 
 from fastapi import APIRouter, HTTPException, status
@@ -15,9 +15,9 @@ from robot.finviz import ElementNotFoundError
 
 from models import ResponseType
 from models.history import Period, StockPriceRecord
-from models.financials import StatementType, SECFilingRecord, TagInfo
+from models.financials import StatementType, SECFilingRecord, TagInfo, StockMetaInfo
 
-from utils import forge_csv_response
+from utils import forge_csv_response, convert_keys
 
 router = APIRouter()
 
@@ -166,4 +166,46 @@ async def get_tags(ticker: str, type: ResponseType = ResponseType.PLAIN):
 
     return forge_csv_response(
         df, is_file=type is ResponseType.CSV, filename=f"{ticker}_tags"
+    )
+
+
+@router.get("/metainfo/{ticker}", response_model=StockMetaInfo | str)
+async def get_metainfo(ticker: str, type: ResponseType = ResponseType.PLAIN):
+    try:
+        import pandas as pd
+
+        df_yahoo = yahoo.get_partial_metainfo_yahoo(ticker)
+        df_finviz = finviz.get_partial_metainfo_finviz(ticker)
+        earnings_date = yahoo.get_earnings_date(ticker)
+
+        df = pd.concat([df_yahoo, df_finviz])
+        df.loc["Earnings Date"] = earnings_date
+    except ElementNotFoundError as e:
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR, f"Inernal Server Error: {e}"
+        )
+
+    if type is ResponseType.MODEL:
+        try:
+            df.rename(
+                index={
+                    original: converted
+                    for original, converted in zip(
+                        df.index, convert_keys(df.index.tolist())
+                    )
+                },
+                inplace=True,
+            )
+            df_dict = df.to_dict()["Value"]
+            df_dict["index_participation"] = list(
+                df_dict["index_participation"].split(",")
+            )
+            return StockMetaInfo(**df_dict)
+        except ValidationError as e:
+            raise HTTPException(
+                status.HTTP_500_INTERNAL_SERVER_ERROR, f"Internal Server Error: {e}"
+            )
+
+    return forge_csv_response(
+        df, is_file=type is ResponseType.CSV, filename=f"{ticker}_metainfo"
     )
