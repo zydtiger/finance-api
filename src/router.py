@@ -3,7 +3,7 @@ Fastapi router file.
 
 Author: tigerding
 Email: zhiyuanding01@gmail.com
-Version: 0.8.0
+Version: 0.8.1
 """
 
 from fastapi import APIRouter, HTTPException, status
@@ -20,6 +20,13 @@ from models.financials import StatementType, SECFilingRecord, TagInfo, StockMeta
 from utils import forge_csv_response, convert_keys
 
 router = APIRouter()
+
+
+def internal_error(e: Exception) -> HTTPException:
+    return HTTPException(
+        status.HTTP_500_INTERNAL_SERVER_ERROR,
+        f"Internal server error: {e}",
+    )
 
 
 @router.get("/history/{ticker}", response_model=list[StockPriceRecord] | str)
@@ -53,10 +60,7 @@ async def get_history(
     try:
         df = yahoo.get_history(ticker, start=start_date, end=end_date, period=period)
     except Exception as e:
-        raise HTTPException(
-            status.HTTP_500_INTERNAL_SERVER_ERROR,
-            f"Historical data triggered internal error: {e}",
-        )
+        raise internal_error(e)
 
     # if model, convert dataframe to list[model]
     if type is ResponseType.MODEL:
@@ -79,9 +83,7 @@ async def get_history(
                 map(lambda row: StockPriceRecord(**row[1].to_dict()), df.iterrows())
             )
         except ValidationError as e:
-            raise HTTPException(
-                status.HTTP_500_INTERNAL_SERVER_ERROR, f"Internal Server Error: {e}"
-            )
+            raise internal_error(e)
 
     return forge_csv_response(df, is_file=type is ResponseType.CSV, filename=ticker)
 
@@ -131,9 +133,7 @@ async def get_sec_filings(ticker: str, type: ResponseType = ResponseType.PLAIN):
         try:
             return [SECFilingRecord(**row.to_dict()) for _index, row in df.iterrows()]
         except ValidationError as e:
-            raise HTTPException(
-                status.HTTP_500_INTERNAL_SERVER_ERROR, f"Internal Server Error: {e}"
-            )
+            raise internal_error(e)
 
     return forge_csv_response(
         df, is_file=type is ResponseType.CSV, filename=f"{ticker}_sec_filings"
@@ -145,9 +145,7 @@ async def get_tags(ticker: str, type: ResponseType = ResponseType.PLAIN):
     try:
         df = finviz.get_tags(ticker)
     except ElementNotFoundError as e:
-        raise HTTPException(
-            status.HTTP_500_INTERNAL_SERVER_ERROR, f"Inernal Server Error: {e}"
-        )
+        raise internal_error(e)
 
     if type is ResponseType.MODEL:
         try:
@@ -160,9 +158,7 @@ async def get_tags(ticker: str, type: ResponseType = ResponseType.PLAIN):
             )
             return [TagInfo(**row.to_dict()) for _index, row in df.iterrows()]
         except ValidationError as e:
-            raise HTTPException(
-                status.HTTP_500_INTERNAL_SERVER_ERROR, f"Internal Server Error: {e}"
-            )
+            raise internal_error(e)
 
     return forge_csv_response(
         df, is_file=type is ResponseType.CSV, filename=f"{ticker}_tags"
@@ -181,9 +177,7 @@ async def get_metainfo(ticker: str, type: ResponseType = ResponseType.PLAIN):
         df = pd.concat([df_yahoo, df_finviz])
         df.loc["Earnings Date"] = earnings_date
     except ElementNotFoundError as e:
-        raise HTTPException(
-            status.HTTP_500_INTERNAL_SERVER_ERROR, f"Inernal Server Error: {e}"
-        )
+        raise internal_error(e)
 
     if type is ResponseType.MODEL:
         try:
@@ -202,9 +196,7 @@ async def get_metainfo(ticker: str, type: ResponseType = ResponseType.PLAIN):
             )
             return StockMetaInfo(**df_dict)
         except ValidationError as e:
-            raise HTTPException(
-                status.HTTP_500_INTERNAL_SERVER_ERROR, f"Internal Server Error: {e}"
-            )
+            raise internal_error(e)
 
     return forge_csv_response(
         df, is_file=type is ResponseType.CSV, filename=f"{ticker}_metainfo"
