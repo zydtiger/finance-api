@@ -3,7 +3,7 @@ Yahoo backend implemeneted with yfinance.
 
 Author: tigerding
 Email: zhiyuanding01@gmail.com
-Version: 0.6.0
+Version: 0.7.0
 """
 
 import yfinance as yf
@@ -124,3 +124,53 @@ def get_sec_filings(ticker: str) -> pd.DataFrame:
         for filing in sec_filings
     ]
     return pd.DataFrame(sec_filings_parsable)
+
+
+def get_earnings_date(ticker: str) -> datetime:
+    """
+    Gets earnings date for stock using yahoo.
+
+    Args:
+        ticker (str): stock ticker symbol
+
+    Returns:
+        datetime: datetime object of earnings date
+    """
+
+    return yf.Ticker(ticker).calendar["Earnings Date"][0]
+
+
+def get_partial_metainfo_yahoo(ticker: str) -> pd.DataFrame:
+    """
+    Gets partial metainfo for stock using yahoo.
+
+    Args:
+        ticker (str): stock ticker symbol
+
+    Returns:
+        pd.DataFrame: pandas DataFrame of partial metainfo
+    """
+
+    metainfo_yf = yf.Ticker(ticker).info
+    metainfo_dict = {
+        "Ticker": metainfo_yf["symbol"],
+        "Name": metainfo_yf["longName"],
+        "Exchange": metainfo_yf["exchange"],
+        "Summary": metainfo_yf["longBusinessSummary"],
+        "Employees": metainfo_yf["fullTimeEmployees"],
+        "Dividend Rate": metainfo_yf["dividendRate"],
+        "Price to Book": metainfo_yf["priceToBook"],
+        "Price to Earning (TTM)": metainfo_yf["trailingPE"],
+        "EPS (TTM)": metainfo_yf["trailingEps"],
+        "Market Cap": metainfo_yf["marketCap"],
+        "Fiftytwo Week Low": metainfo_yf["fiftyTwoWeekLow"],
+        "Fiftytwo Week High": metainfo_yf["fiftyTwoWeekHigh"],
+        "Shares Outstanding": metainfo_yf["sharesOutstanding"],
+        "Revenue": metainfo_yf["totalRevenue"],
+        "EBITDA": metainfo_yf["ebitda"],
+        "Gross Margins": metainfo_yf["grossMargins"],
+        "Operating Margins": metainfo_yf["operatingMargins"],
+        "Net Profit Margins": metainfo_yf["profitMargins"],
+    }
+
+    return pd.DataFrame.from_dict(metainfo_dict, orient="index", columns=["Value"])
