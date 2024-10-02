@@ -3,7 +3,7 @@ Fastapi router file.
 
 Author: tigerding
 Email: zhiyuanding01@gmail.com
-Version: 0.8.2
+Version: 0.8.3
 """
 
 from fastapi import APIRouter, HTTPException, status
@@ -58,7 +58,9 @@ async def get_history(
         )
 
     try:
-        df = yahoo.get_history(ticker, start=start_date, end=end_date, period=period)
+        df = await yahoo.get_history(
+            ticker, start=start_date, end=end_date, period=period
+        )
     except Exception as e:
         raise internal_error(e)
 
@@ -93,7 +95,7 @@ async def get_history(
 async def get_income_statement(
     ticker: str, type: StatementType = StatementType.YEARLY, file: bool = False
 ):
-    df = yahoo.get_income_statement(ticker, type)
+    df = await yahoo.get_income_statement(ticker, type)
     return forge_csv_response(df, is_file=file, filename=f"{ticker}_income_statement")
 
 
@@ -102,7 +104,7 @@ async def get_income_statement(
 async def get_cashflow_statement(
     ticker: str, type: StatementType = StatementType.YEARLY, file: bool = False
 ):
-    df = yahoo.get_cashflow_statement(ticker, type)
+    df = await yahoo.get_cashflow_statement(ticker, type)
     return forge_csv_response(df, is_file=file, filename=f"{ticker}_cashflow_statement")
 
 
@@ -111,13 +113,13 @@ async def get_cashflow_statement(
 async def get_balance_sheet(
     ticker: str, type: StatementType = StatementType.YEARLY, file: bool = False
 ):
-    df = yahoo.get_cashflow_statement(ticker, type)
+    df = await yahoo.get_cashflow_statement(ticker, type)
     return forge_csv_response(df, is_file=file, filename=f"{ticker}_balance_sheet")
 
 
 @router.get("/sec/{ticker}", response_model=list[SECFilingRecord] | str)
 async def get_sec_filings(ticker: str, type: ResponseType = ResponseType.PLAIN):
-    df = yahoo.get_sec_filings(ticker)
+    df = await yahoo.get_sec_filings(ticker)
 
     # if model, convert dataframe to list[model]
     if type is ResponseType.MODEL:
@@ -170,9 +172,9 @@ async def get_metainfo(ticker: str, type: ResponseType = ResponseType.PLAIN):
     try:
         import pandas as pd
 
-        df_yahoo = yahoo.get_partial_metainfo_yahoo(ticker)
+        df_yahoo = await yahoo.get_partial_metainfo_yahoo(ticker)
         df_finviz = await finviz.get_partial_metainfo_finviz(ticker)
-        earnings_date = yahoo.get_earnings_date(ticker)
+        earnings_date = await yahoo.get_earnings_date(ticker)
 
         df = pd.concat([df_yahoo, df_finviz])
         df.loc["Earnings Date"] = earnings_date

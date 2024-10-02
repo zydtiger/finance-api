@@ -3,9 +3,10 @@ Yahoo backend implemeneted with yfinance.
 
 Author: tigerding
 Email: zhiyuanding01@gmail.com
-Version: 0.7.0
+Version: 0.7.1
 """
 
+import asyncio
 import yfinance as yf
 import pandas as pd
 from datetime import datetime
@@ -14,7 +15,7 @@ from models.history import Period
 from models.financials import StatementType
 
 
-def get_history(
+async def get_history(
     ticker: str, start: datetime | None, end: datetime | None, period: Period | None
 ) -> pd.DataFrame:
     """
@@ -34,15 +35,18 @@ def get_history(
     """
 
     # adapter of yahoo finance
-    return yf.Ticker(ticker).history(
+    history_func = lambda: yf.Ticker(ticker).history(
         period=period.value if period is not None else None,
         start=start,
         end=end,
         raise_errors=True,
     )
 
+    # wrap inside asyncio.to_thread to make non-blocking
+    return await asyncio.to_thread(history_func)
 
-def get_income_statement(ticker: str, type: StatementType) -> pd.DataFrame:
+
+async def get_income_statement(ticker: str, type: StatementType) -> pd.DataFrame:
     """
     Gets income statement for ticker.
 
@@ -54,15 +58,18 @@ def get_income_statement(ticker: str, type: StatementType) -> pd.DataFrame:
     """
 
     # adapter of yahoo finance
+    yearly_income_func = lambda: yf.Ticker(ticker).income_stmt
+    quarterly_income_func = lambda: yf.Ticker(ticker).quarterly_income_stmt
+
     income_df = (
-        yf.Ticker(ticker).income_stmt
+        await asyncio.to_thread(yearly_income_func)
         if type is StatementType.YEARLY
-        else yf.Ticker(ticker).quarterly_income_stmt
+        else await asyncio.to_thread(quarterly_income_func)
     )
     return income_df.iloc[::-1, ::-1]  # reverse rows and columns
 
 
-def get_cashflow_statement(ticker: str, type: StatementType) -> pd.DataFrame:
+async def get_cashflow_statement(ticker: str, type: StatementType) -> pd.DataFrame:
     """
     Gets cash flow statement for ticker.
 
@@ -74,15 +81,18 @@ def get_cashflow_statement(ticker: str, type: StatementType) -> pd.DataFrame:
     """
 
     # adapter of yahoo finance
+    yearly_cashflow_func = lambda: yf.Ticker(ticker).cashflow
+    quarterly_cashflow_func = lambda: yf.Ticker(ticker).quarterly_cashflow
+
     cashflow_df = (
-        yf.Ticker(ticker).cashflow
+        await asyncio.to_thread(yearly_cashflow_func)
         if type is StatementType.YEARLY
-        else yf.Ticker(ticker).quarterly_cashflow
+        else await asyncio.to_thread(quarterly_cashflow_func)
     )
     return cashflow_df.iloc[::-1, ::-1]
 
 
-def get_balance_sheet(ticker: str, type: StatementType) -> pd.DataFrame:
+async def get_balance_sheet(ticker: str, type: StatementType) -> pd.DataFrame:
     """
     Gets balance sheet for ticker.
 
@@ -94,15 +104,18 @@ def get_balance_sheet(ticker: str, type: StatementType) -> pd.DataFrame:
     """
 
     # adapter of yahoo finance
+    yearly_balance_sheet_func = lambda: yf.Ticker(ticker).balance_sheet
+    quarterly_balance_sheet_func = lambda: yf.Ticker(ticker).quarterly_balance_sheet
+
     balance_df = (
-        yf.Ticker(ticker).balance_sheet
+        await asyncio.to_thread(yearly_balance_sheet_func)
         if type is StatementType.YEARLY
-        else yf.Ticker(ticker).quarterly_balance_sheet
+        else await asyncio.to_thread(quarterly_balance_sheet_func)
     )
     return balance_df.iloc[::-1, ::-1]
 
 
-def get_sec_filings(ticker: str) -> pd.DataFrame:
+async def get_sec_filings(ticker: str) -> pd.DataFrame:
     """
     Gets SEC filings for stock.
 
@@ -113,7 +126,7 @@ def get_sec_filings(ticker: str) -> pd.DataFrame:
         pd.DataFrame: pandas DataFrame of SEC filings
     """
 
-    sec_filings = yf.Ticker(ticker).sec_filings
+    sec_filings = await asyncio.to_thread(lambda: yf.Ticker(ticker).sec_filings)
     sec_filings_parsable = [
         {
             "Date": filing["date"],
@@ -126,7 +139,7 @@ def get_sec_filings(ticker: str) -> pd.DataFrame:
     return pd.DataFrame(sec_filings_parsable)
 
 
-def get_earnings_date(ticker: str) -> datetime:
+async def get_earnings_date(ticker: str) -> datetime:
     """
     Gets earnings date for stock using yahoo.
 
@@ -137,10 +150,13 @@ def get_earnings_date(ticker: str) -> datetime:
         datetime: datetime object of earnings date
     """
 
-    return yf.Ticker(ticker).calendar["Earnings Date"][0]
+    earnings_date = await asyncio.to_thread(
+        lambda: yf.Ticker(ticker).calendar["Earnings Date"][0]
+    )
+    return earnings_date
 
 
-def get_partial_metainfo_yahoo(ticker: str) -> pd.DataFrame:
+async def get_partial_metainfo_yahoo(ticker: str) -> pd.DataFrame:
     """
     Gets partial metainfo for stock using yahoo.
 
@@ -151,7 +167,7 @@ def get_partial_metainfo_yahoo(ticker: str) -> pd.DataFrame:
         pd.DataFrame: pandas DataFrame of partial metainfo
     """
 
-    metainfo_yf = yf.Ticker(ticker).info
+    metainfo_yf = await asyncio.to_thread(lambda: yf.Ticker(ticker).info)
     metainfo_dict = {
         "Ticker": metainfo_yf["symbol"],
         "Full Name": metainfo_yf["longName"],
