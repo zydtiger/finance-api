@@ -3,11 +3,11 @@ Financials APIs related models.
 
 Author: tigerding
 Email: zhiyuanding01@gmail.com
-Version: 0.2.0
+Version: 0.2.1
 """
 
 from enum import Enum
-from pydantic import BaseModel, HttpUrl
+from pydantic import BaseModel, Field, HttpUrl
 from datetime import datetime
 
 
@@ -45,34 +45,56 @@ class StockMetaInfo(BaseModel):
     Stock meta info model.
     """
 
-    # yahoo
-    ticker: str  # symbol
-    full_name: str  # longName
-    exchange: str  # exchange
-    summary: str  # longBusinessSummary
-    employees: int  # fullTimeEmployees
-    dividend_rate: float  # dividendRate
-    price_to_book: float  # priceToBook
-    price_to_earning_ttm: float  # trailingPE
-    eps_ttm: float  # trailingEps
-    market_cap: int  # marketCap
-    fiftytwo_week_low: float  # fiftyTwoWeekLow
-    fiftytwo_week_high: float  # fiftyTwoWeekHigh
-    shares_outstanding: int  # sharesOutstanding
-    revenue: int  # totalRevenue
-    ebitda: int  # ebitda
-    gross_margins: float  # grossMargins
-    operating_margins: float  # operatingMargins
-    net_profit_margins: float  # profitMargins
+    ## FROM yahoo
+    # symbol
+    ticker: str
+    # longName
+    full_name: str
+    # exchange
+    exchange: str
+    # longBusinessSummary
+    summary: str
+    # fullTimeEmployees
+    employees: int
+    # dividendRate
+    dividend_rate: float = Field(serialization_alias="dividendRate")
+    # priceToBook
+    price_to_book: float = Field(serialization_alias="priceToBook")
+    # trailingPE
+    price_to_earning_ttm: float = Field(serialization_alias="priceToEarningTTM")
+    # trailingEps
+    eps_ttm: float = Field(serialization_alias="epsTTM")
+    # marketCap
+    market_cap: int = Field(serialization_alias="marketCap")
+    # fiftyTwoWeekLow
+    fiftytwo_week_low: float = Field(serialization_alias="fiftytwoWeekLow")
+    # fiftyTwoWeekHigh
+    fiftytwo_week_high: float = Field(serialization_alias="fiftytwoWeekHigh")
+    # sharesOutstanding
+    shares_outstanding: int = Field(serialization_alias="sharesOutstanding")
+    # totalRevenue
+    revenue: int
+    # ebitda
+    ebitda: int
+    # grossMargins
+    gross_margins: float = Field(serialization_alias="grossMargins")
+    # operatingMargins
+    operating_margins: float = Field(serialization_alias="operatingMargins")
+    # profitMargins
+    net_profit_margins: float = Field(serialization_alias="netProfitMargins")
 
-    # finviz
-    index_participation: list[str]  # Index
-    eps_yearly_growth: float  # EPS Y/Y TTM
-    eps_quarterly_growth: float  # EPS Q/Q
-    eps_surprise: float  # EPS Surprise
+    ## FROM get_calendar (yahoo)
+    earnings_date: datetime = Field(serialization_alias="earningsDate")
 
-    # get_calendar
-    earnings_date: datetime
+    ## FROM finviz
+    # Index
+    index_participation: list[str] = Field(serialization_alias="indexParticipation")
+    # EPS Y/Y TTM
+    eps_yearly_growth: float = Field(serialization_alias="epsYearlyGrowth")
+    # EPS Q/Q
+    eps_quarterly_growth: float = Field(serialization_alias="epsQuarterlyGrowth")
+    # EPS Surprise
+    eps_surprise: float = Field(serialization_alias="epsSurprise")
 
 
 # todo: current_price?
