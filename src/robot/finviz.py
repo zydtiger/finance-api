@@ -3,11 +3,11 @@ Finviz backend implemeneted with web scraping.
 
 Author: tigerding
 Email: zhiyuanding01@gmail.com
-Version: 0.2.0
+Version: 0.2.1
 """
 
 import pandas as pd
-import requests
+import aiohttp
 from bs4 import BeautifulSoup
 
 FINVIZ_BASE_URL = "https://finviz.com/"
@@ -20,7 +20,7 @@ class ElementNotFoundError(Exception):
     pass
 
 
-def parse_stock_page(ticker: str) -> BeautifulSoup:
+async def parse_stock_page(ticker: str) -> BeautifulSoup:
     """
     Gets parsed html page contents for stock from finviz.com.
 
@@ -30,16 +30,15 @@ def parse_stock_page(ticker: str) -> BeautifulSoup:
     Returns:
        BeautifulSoup: parsed html page
     """
+    async with aiohttp.ClientSession() as session:
+        response = await session.get(
+            FINVIZ_STOCK_URL, params={"t": ticker}, headers={"User-Agent": CHROME_USER_AGENT}
+        )
+        content = await response.text()
+        return BeautifulSoup(content, "lxml")
 
-    response = requests.get(
-        FINVIZ_STOCK_URL,
-        {"t": ticker},
-        headers={"User-Agent": CHROME_USER_AGENT},
-    )
-    return BeautifulSoup(response.content, "lxml")
 
-
-def get_tags(ticker: str) -> pd.DataFrame:
+async def get_tags(ticker: str) -> pd.DataFrame:
     """
     Gets tags for stock from finviz.com.
 
@@ -50,7 +49,7 @@ def get_tags(ticker: str) -> pd.DataFrame:
         pd.DataFrame: pandas DataFrame of stock tags
     """
 
-    page = parse_stock_page(ticker)
+    page = await parse_stock_page(ticker)
     tags_container = page.select_one(".quote-links div")
     if not tags_container:
         raise ElementNotFoundError("Tags container not found")
@@ -66,7 +65,7 @@ def get_tags(ticker: str) -> pd.DataFrame:
     return pd.DataFrame(tag_links)
 
 
-def get_partial_metainfo_finviz(ticker: str) -> pd.DataFrame:
+async def get_partial_metainfo_finviz(ticker: str) -> pd.DataFrame:
     """
     Gets partial metainfo for stock using finviz.
 
@@ -77,7 +76,7 @@ def get_partial_metainfo_finviz(ticker: str) -> pd.DataFrame:
         pd.DataFrame: pandas DataFrame of partial metainfo
     """
 
-    page = parse_stock_page(ticker)
+    page = await parse_stock_page(ticker)
     metainfo_table_elem = page.select_one(".js-snapshot-table")
     if not metainfo_table_elem:
         raise ElementNotFoundError("Metainfo table not found")
