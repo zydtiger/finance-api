@@ -49,7 +49,7 @@ class StockMetaInfo(BaseModel):
     # symbol
     ticker: str
     # longName
-    full_name: str
+    full_name: str = Field(serialization_alias="fullName")
     # exchange
     exchange: str
     # longBusinessSummary
