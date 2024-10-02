@@ -8,6 +8,7 @@ Version: 0.1.1
 
 import pandas as pd
 from io import StringIO
+from fastapi import status, HTTPException
 from fastapi.responses import PlainTextResponse
 
 
@@ -38,3 +39,10 @@ def convert_keys(keys: list[str]) -> list[str]:
         )
 
     return converted_keys
+
+
+def internal_error(e: Exception) -> HTTPException:
+    return HTTPException(
+        status.HTTP_500_INTERNAL_SERVER_ERROR,
+        f"Internal server error: {e}",
+    )

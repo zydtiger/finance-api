@@ -17,16 +17,9 @@ from models import ResponseType
 from models.history import Period, StockPriceRecord
 from models.financials import StatementType, SECFilingRecord, TagInfo, StockMetaInfo
 
-from utils import forge_csv_response, convert_keys
+from utils import forge_csv_response, convert_keys, internal_error
 
 router = APIRouter()
-
-
-def internal_error(e: Exception) -> HTTPException:
-    return HTTPException(
-        status.HTTP_500_INTERNAL_SERVER_ERROR,
-        f"Internal server error: {e}",
-    )
 
 
 @router.get("/history/{ticker}", response_model=list[StockPriceRecord] | str)
