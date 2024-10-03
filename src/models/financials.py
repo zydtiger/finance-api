@@ -3,7 +3,7 @@ Financials APIs related models.
 
 Author: tigerding
 Email: zhiyuanding01@gmail.com
-Version: 0.2.1
+Version: 0.3.0
 """
 
 from enum import Enum
@@ -95,6 +95,18 @@ class StockMetaInfo(BaseModel):
     eps_quarterly_growth: float = Field(serialization_alias="epsQuarterlyGrowth")
     # EPS Surprise
     eps_surprise: float = Field(serialization_alias="epsSurprise")
+
+
+class NewsRecord(BaseModel):
+    """
+    News record type, matches frontend.
+    """
+
+    date: datetime
+    title: str
+    link: str
+    publisher: str
+    thumb_img_src: str = Field(serialization_alias="thumbImgSrc")
 
 
 # todo: current_price?

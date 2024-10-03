@@ -3,7 +3,7 @@ Fastapi router file.
 
 Author: tigerding
 Email: zhiyuanding01@gmail.com
-Version: 0.8.3
+Version: 0.9.0
 """
 
 from fastapi import APIRouter, HTTPException, status
@@ -15,7 +15,13 @@ from robot.finviz import ElementNotFoundError
 
 from models import ResponseType
 from models.history import Period, StockPriceRecord
-from models.financials import StatementType, SECFilingRecord, TagInfo, StockMetaInfo
+from models.financials import (
+    StatementType,
+    SECFilingRecord,
+    TagInfo,
+    StockMetaInfo,
+    NewsRecord,
+)
 
 from utils import forge_csv_response, convert_keys, internal_error
 
@@ -195,4 +201,32 @@ async def get_metainfo(ticker: str, type: ResponseType = ResponseType.PLAIN):
 
     return forge_csv_response(
         df, is_file=type is ResponseType.CSV, filename=f"{ticker}_metainfo"
+    )
+
+
+@router.get("/news/{ticker}", response_model=list[NewsRecord] | str)
+async def get_news(ticker: str, type: ResponseType = ResponseType.PLAIN):
+    try:
+        df = await finviz.get_news(ticker)
+    except ElementNotFoundError as e:
+        raise internal_error(e)
+
+    if type is ResponseType.MODEL:
+        try:
+            df.rename(
+                columns={
+                    "Date": "date",
+                    "Title": "title",
+                    "Link": "link",
+                    "Publisher": "publisher",
+                    "Thumb Img Src": "thumb_img_src",
+                },
+                inplace=True,
+            )
+            return [NewsRecord(**row.to_dict()) for _index, row in df.iterrows()]
+        except ValidationError as e:
+            raise internal_error(e)
+
+    return forge_csv_response(
+        df, is_file=type is ResponseType.CSV, filename=f"{ticker}_news"
     )

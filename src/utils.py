@@ -3,13 +3,14 @@ Utilities file.
 
 Author: tigerding
 Email: zhiyuanding01@gmail.com
-Version: 0.1.1
+Version: 0.1.2
 """
 
 import pandas as pd
 from io import StringIO
 from fastapi import status, HTTPException
 from fastapi.responses import PlainTextResponse
+from urllib.parse import urlparse
 
 
 def forge_csv_response(
@@ -46,3 +47,8 @@ def internal_error(e: Exception) -> HTTPException:
         status.HTTP_500_INTERNAL_SERVER_ERROR,
         f"Internal server error: {e}",
     )
+
+
+def get_url_origin(url: str) -> str:
+    parsed_url = urlparse(url)
+    return f"{parsed_url.scheme}://{parsed_url.netloc}"
