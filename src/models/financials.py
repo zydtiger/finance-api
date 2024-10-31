@@ -90,9 +90,9 @@ class StockMetaInfo(BaseModel):
     # Index
     index_participation: list[str] = Field(serialization_alias="indexParticipation")
     # EPS Y/Y TTM
-    eps_yearly_growth: float = Field(serialization_alias="epsYearlyGrowth")
+    eps_yearly_growth_ttm: float = Field(serialization_alias="epsYearlyGrowthTTM")
     # EPS Q/Q
-    eps_quarterly_growth: float = Field(serialization_alias="epsQuarterlyGrowth")
+    eps_quarterly_growth_yoy: float = Field(serialization_alias="epsQuarterlyGrowthYoY")
     # EPS Surprise
     eps_surprise: float = Field(serialization_alias="epsSurprise")
 
