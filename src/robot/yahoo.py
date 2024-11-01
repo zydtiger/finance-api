@@ -174,7 +174,7 @@ async def get_partial_metainfo_yahoo(ticker: str) -> pd.DataFrame:
         "Exchange": metainfo_yf["exchange"],
         "Summary": metainfo_yf["longBusinessSummary"],
         "Employees": metainfo_yf["fullTimeEmployees"],
-        "Dividend Rate": metainfo_yf["dividendRate"],
+        "Dividend Rate": metainfo_yf.get("dividendRate"),
         "Price to Book": metainfo_yf["priceToBook"],
         "Price to Earning (TTM)": metainfo_yf["trailingPE"],
         "EPS (TTM)": metainfo_yf["trailingEps"],

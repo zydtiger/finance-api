@@ -57,7 +57,7 @@ class StockMetaInfo(BaseModel):
     # fullTimeEmployees
     employees: int
     # dividendRate
-    dividend_rate: float = Field(serialization_alias="dividendRate")
+    dividend_rate: float | None = Field(serialization_alias="dividendRate")
     # priceToBook
     price_to_book: float = Field(serialization_alias="priceToBook")
     # trailingPE
