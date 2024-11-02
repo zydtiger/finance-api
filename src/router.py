@@ -3,7 +3,7 @@ Fastapi router file.
 
 Author: tigerding
 Email: zhiyuanding01@gmail.com
-Version: 0.9.0
+Version: 0.9.1
 """
 
 from fastapi import APIRouter
@@ -75,7 +75,37 @@ async def get_history(
         }
         df.rename(columns=rename_dict, inplace=True)
         try:
-            [StockPriceRecord(**row.to_dict()) for _index, row in df.iterrows()]
+            return [StockPriceRecord(**row.to_dict()) for _index, row in df.iterrows()]
+        except ValidationError as e:
+            raise internal_error(e)
+
+    return forge_csv_response(df, is_file=type is ResponseType.CSV, filename=ticker)
+
+
+@router.get("/intraday/{ticker}", response_model=list[StockPriceRecord] | str)
+async def get_intraday(ticker: str, type: ResponseType = ResponseType.PLAIN):
+    try:
+        df = await yahoo.get_history(ticker, interval="1m", period=Period.DAY)
+        df.index.name = "Date"
+    except Exception as e:
+        raise internal_error(e)
+
+    # if model, convert dataframe to list[model]
+    if type is ResponseType.MODEL:
+        # use number as index instead of date
+        # so date can be parsed in row
+        df.reset_index(inplace=True)
+        rename_dict = {
+            "Date": "date",
+            "Open": "open",
+            "High": "high",
+            "Low": "low",
+            "Close": "close",
+            "Volume": "volume",
+        }
+        df.rename(columns=rename_dict, inplace=True)
+        try:
+            return [StockPriceRecord(**row.to_dict()) for _index, row in df.iterrows()]
         except ValidationError as e:
             raise internal_error(e)
 

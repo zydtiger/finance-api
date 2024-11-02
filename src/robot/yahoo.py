@@ -3,7 +3,7 @@ Yahoo backend implemeneted with yfinance.
 
 Author: tigerding
 Email: zhiyuanding01@gmail.com
-Version: 0.7.1
+Version: 0.7.2
 """
 
 import asyncio
@@ -16,7 +16,11 @@ from models.financials import StatementType
 
 
 async def get_history(
-    ticker: str, start: datetime | None, end: datetime | None, period: Period | None
+    ticker: str,
+    interval: str = "1d",
+    period: Period | None = None,
+    start: datetime | None = None,
+    end: datetime | None = None,
 ) -> pd.DataFrame:
     """
     Gets historical data for ticker given the datetime constraints using yahoo backend.
@@ -39,6 +43,7 @@ async def get_history(
         period=period.value if period is not None else None,
         start=start,
         end=end,
+        interval=interval,
         raise_errors=True,
     )
 
