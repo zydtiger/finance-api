@@ -55,13 +55,13 @@ class StockMetaInfo(BaseModel):
     # longBusinessSummary
     summary: str
     # fullTimeEmployees
-    employees: int
+    employees: int | None
     # dividendRate
     dividend_rate: float | None = Field(serialization_alias="dividendRate")
     # priceToBook
     price_to_book: float = Field(serialization_alias="priceToBook")
     # trailingPE
-    price_to_earning_ttm: float = Field(serialization_alias="priceToEarningTTM")
+    price_to_earning_ttm: float | None = Field(serialization_alias="priceToEarningTTM")
     # trailingEps
     eps_ttm: float = Field(serialization_alias="epsTTM")
     # marketCap
