@@ -6,7 +6,7 @@ Email: zhiyuanding01@gmail.com
 Version: 0.9.0
 """
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter
 from datetime import datetime
 from pydantic import ValidationError
 
@@ -23,7 +23,7 @@ from models.financials import (
     NewsRecord,
 )
 
-from utils import forge_csv_response, convert_keys, internal_error
+from utils import forge_csv_response, convert_keys, internal_error, bad_request
 
 router = APIRouter()
 
@@ -37,9 +37,8 @@ async def get_history(
     type: ResponseType = ResponseType.PLAIN,
 ):
     if start is not None and end is not None and period is not None:
-        raise HTTPException(
-            status.HTTP_400_BAD_REQUEST,
-            "Bad request params to API, please refer to /docs for details",
+        raise bad_request(
+            "Bad request params to API, please refer to /docs for details"
         )
 
     if period is None and (start is None or end is None):
@@ -52,9 +51,7 @@ async def get_history(
         start_date = parse_date(start) if start is not None else None
         end_date = parse_date(end) if end is not None else None
     except ValueError as e:
-        raise HTTPException(
-            status.HTTP_400_BAD_REQUEST, f"Bad request date format: {e}"
-        )
+        raise bad_request(f"wrong date format {e}")
 
     try:
         df = await yahoo.get_history(
@@ -68,21 +65,17 @@ async def get_history(
         # use number as index instead of date
         # so date can be parsed in row
         df.reset_index(inplace=True)
-        df.rename(
-            columns={
-                "Date": "date",
-                "Open": "open",
-                "High": "high",
-                "Low": "low",
-                "Close": "close",
-                "Volume": "volume",
-            },
-            inplace=True,
-        )
+        rename_dict = {
+            "Date": "date",
+            "Open": "open",
+            "High": "high",
+            "Low": "low",
+            "Close": "close",
+            "Volume": "volume",
+        }
+        df.rename(columns=rename_dict, inplace=True)
         try:
-            return list(
-                map(lambda row: StockPriceRecord(**row[1].to_dict()), df.iterrows())
-            )
+            [StockPriceRecord(**row.to_dict()) for _index, row in df.iterrows()]
         except ValidationError as e:
             raise internal_error(e)
 
@@ -122,15 +115,13 @@ async def get_sec_filings(ticker: str, type: ResponseType = ResponseType.PLAIN):
 
     # if model, convert dataframe to list[model]
     if type is ResponseType.MODEL:
-        df.rename(
-            columns={
-                "Date": "date",
-                "Type": "type",
-                "Title": "title",
-                "Link": "link",
-            },
-            inplace=True,
-        )
+        rename_dict = {
+            "Date": "date",
+            "Type": "type",
+            "Title": "title",
+            "Link": "link",
+        }
+        df.rename(columns=rename_dict, inplace=True)
         try:
             return [SECFilingRecord(**row.to_dict()) for _index, row in df.iterrows()]
         except ValidationError as e:
@@ -149,14 +140,12 @@ async def get_tags(ticker: str, type: ResponseType = ResponseType.PLAIN):
         raise internal_error(e)
 
     if type is ResponseType.MODEL:
+        rename_dict = {
+            "Name": "name",
+            "Link": "link",
+        }
+        df.rename(columns=rename_dict, inplace=True)
         try:
-            df.rename(
-                columns={
-                    "Name": "name",
-                    "Link": "link",
-                },
-                inplace=True,
-            )
             return [TagInfo(**row.to_dict()) for _index, row in df.iterrows()]
         except ValidationError as e:
             raise internal_error(e)
@@ -181,20 +170,14 @@ async def get_metainfo(ticker: str, type: ResponseType = ResponseType.PLAIN):
         raise internal_error(e)
 
     if type is ResponseType.MODEL:
+        rename_dict = {
+            original: converted
+            for original, converted in zip(df.index, convert_keys(df.index.tolist()))
+        }
+        df.rename(index=rename_dict, inplace=True)
+        df_dict = df.to_dict()["Value"]
+        df_dict["index_participation"] = list(df_dict["index_participation"].split(","))
         try:
-            df.rename(
-                index={
-                    original: converted
-                    for original, converted in zip(
-                        df.index, convert_keys(df.index.tolist())
-                    )
-                },
-                inplace=True,
-            )
-            df_dict = df.to_dict()["Value"]
-            df_dict["index_participation"] = list(
-                df_dict["index_participation"].split(",")
-            )
             return StockMetaInfo(**df_dict)
         except ValidationError as e:
             raise internal_error(e)
@@ -212,17 +195,15 @@ async def get_news(ticker: str, type: ResponseType = ResponseType.PLAIN):
         raise internal_error(e)
 
     if type is ResponseType.MODEL:
+        rename_dict = {
+            "Date": "date",
+            "Title": "title",
+            "Link": "link",
+            "Publisher": "publisher",
+            "Thumb Img Src": "thumb_img_src",
+        }
+        df.rename(columns=rename_dict, inplace=True)
         try:
-            df.rename(
-                columns={
-                    "Date": "date",
-                    "Title": "title",
-                    "Link": "link",
-                    "Publisher": "publisher",
-                    "Thumb Img Src": "thumb_img_src",
-                },
-                inplace=True,
-            )
             return [NewsRecord(**row.to_dict()) for _index, row in df.iterrows()]
         except ValidationError as e:
             raise internal_error(e)

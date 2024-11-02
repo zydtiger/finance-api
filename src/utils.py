@@ -16,6 +16,18 @@ from urllib.parse import urlparse
 def forge_csv_response(
     df: pd.DataFrame, is_file: bool, filename: str
 ) -> PlainTextResponse:
+    """
+    Forges csv response as either direct text or downloaded file.
+
+    Args:
+        df (pd.DataFrame): source data
+        is_file (bool): whether to download as file
+        filename (str): filename of downloaded file
+
+    Returns:
+        PlainTextResponse: http response of either text or file
+    """
+
     # plain text response
     csv_buffer = StringIO()
     df.to_csv(csv_buffer)
@@ -47,6 +59,10 @@ def internal_error(e: Exception) -> HTTPException:
         status.HTTP_500_INTERNAL_SERVER_ERROR,
         f"Internal server error: {e}",
     )
+
+
+def bad_request(msg: str) -> HTTPException:
+    return HTTPException(status.HTTP_400_BAD_REQUEST, f"Bad request: {msg}")
 
 
 def get_url_origin(url: str) -> str:
