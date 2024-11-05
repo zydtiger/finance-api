@@ -48,7 +48,13 @@ async def get_history(
     )
 
     # wrap inside asyncio.to_thread to make non-blocking
-    return await asyncio.to_thread(history_func)
+    df = await asyncio.to_thread(history_func)
+    last_date = df.index[-1]
+    today = pd.Timestamp.now(tz="US/Eastern").normalize()
+    if last_date == today:
+        df.drop(last_date, inplace=True)
+
+    return df
 
 
 async def get_income_statement(ticker: str, type: StatementType) -> pd.DataFrame:
