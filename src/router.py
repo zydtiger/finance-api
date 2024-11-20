@@ -3,10 +3,11 @@ Fastapi router file.
 
 Author: tigerding
 Email: zhiyuanding01@gmail.com
-Version: 0.9.1
+Version: 0.9.2
 """
 
 from fastapi import APIRouter
+from fastapi.responses import PlainTextResponse
 from datetime import datetime
 from pydantic import ValidationError
 
@@ -57,8 +58,8 @@ async def get_history(
         df = await yahoo.get_history(
             ticker, start=start_date, end=end_date, period=period
         )
-    except Exception as e:
-        raise internal_error(e)
+    except Exception:
+        return [] if type is ResponseType.MODEL else PlainTextResponse()
 
     # if model, convert dataframe to list[model]
     if type is ResponseType.MODEL:
@@ -76,8 +77,8 @@ async def get_history(
         df.rename(columns=rename_dict, inplace=True)
         try:
             return [StockPriceRecord(**row.to_dict()) for _index, row in df.iterrows()]
-        except ValidationError as e:
-            raise internal_error(e)
+        except ValidationError:
+            return []
 
     return forge_csv_response(df, is_file=type is ResponseType.CSV, filename=ticker)
 
@@ -87,8 +88,8 @@ async def get_intraday(ticker: str, type: ResponseType = ResponseType.PLAIN):
     try:
         df = await yahoo.get_history(ticker, interval="1m", period=Period.DAY)
         df.index.name = "Date"
-    except Exception as e:
-        raise internal_error(e)
+    except Exception:
+        return [] if type is ResponseType.MODEL else PlainTextResponse()
 
     # if model, convert dataframe to list[model]
     if type is ResponseType.MODEL:
@@ -106,8 +107,8 @@ async def get_intraday(ticker: str, type: ResponseType = ResponseType.PLAIN):
         df.rename(columns=rename_dict, inplace=True)
         try:
             return [StockPriceRecord(**row.to_dict()) for _index, row in df.iterrows()]
-        except ValidationError as e:
-            raise internal_error(e)
+        except ValidationError:
+            return []
 
     return forge_csv_response(df, is_file=type is ResponseType.CSV, filename=ticker)
 
@@ -154,8 +155,8 @@ async def get_sec_filings(ticker: str, type: ResponseType = ResponseType.PLAIN):
         df.rename(columns=rename_dict, inplace=True)
         try:
             return [SECFilingRecord(**row.to_dict()) for _index, row in df.iterrows()]
-        except ValidationError as e:
-            raise internal_error(e)
+        except ValidationError:
+            return []
 
     return forge_csv_response(
         df, is_file=type is ResponseType.CSV, filename=f"{ticker}_sec_filings"
@@ -166,8 +167,8 @@ async def get_sec_filings(ticker: str, type: ResponseType = ResponseType.PLAIN):
 async def get_tags(ticker: str, type: ResponseType = ResponseType.PLAIN):
     try:
         df = await finviz.get_tags(ticker)
-    except ElementNotFoundError as e:
-        raise internal_error(e)
+    except ElementNotFoundError:
+        return [] if type is ResponseType.MODEL else PlainTextResponse()
 
     if type is ResponseType.MODEL:
         rename_dict = {
@@ -177,8 +178,8 @@ async def get_tags(ticker: str, type: ResponseType = ResponseType.PLAIN):
         df.rename(columns=rename_dict, inplace=True)
         try:
             return [TagInfo(**row.to_dict()) for _index, row in df.iterrows()]
-        except ValidationError as e:
-            raise internal_error(e)
+        except ValidationError:
+            return []
 
     return forge_csv_response(
         df, is_file=type is ResponseType.CSV, filename=f"{ticker}_tags"
@@ -221,7 +222,7 @@ async def get_news(ticker: str, type: ResponseType = ResponseType.PLAIN):
     try:
         df = await finviz.get_news(ticker)
     except ElementNotFoundError as e:
-        raise internal_error(e)
+        return [] if type is ResponseType.MODEL else PlainTextResponse()
 
     if type is ResponseType.MODEL:
         rename_dict = {
@@ -234,8 +235,8 @@ async def get_news(ticker: str, type: ResponseType = ResponseType.PLAIN):
         df.rename(columns=rename_dict, inplace=True)
         try:
             return [NewsRecord(**row.to_dict()) for _index, row in df.iterrows()]
-        except ValidationError as e:
-            raise internal_error(e)
+        except ValidationError:
+            return []
 
     return forge_csv_response(
         df, is_file=type is ResponseType.CSV, filename=f"{ticker}_news"
