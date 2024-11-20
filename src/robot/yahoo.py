@@ -10,6 +10,7 @@ import asyncio
 import yfinance as yf
 import pandas as pd
 from datetime import datetime
+from contextlib import redirect_stderr
 
 from models.history import Period
 from models.financials import StatementType
@@ -150,7 +151,7 @@ async def get_sec_filings(ticker: str) -> pd.DataFrame:
     return pd.DataFrame(sec_filings_parsable)
 
 
-async def get_earnings_date(ticker: str) -> datetime:
+async def get_earnings_date(ticker: str) -> datetime | None:
     """
     Gets earnings date for stock using yahoo.
 
@@ -161,10 +162,12 @@ async def get_earnings_date(ticker: str) -> datetime:
         datetime: datetime object of earnings date
     """
 
-    earnings_date = await asyncio.to_thread(
-        lambda: yf.Ticker(ticker).calendar["Earnings Date"][0]
-    )
-    return earnings_date
+    def earnings_date_func() -> datetime | None:
+        with redirect_stderr(None):
+            calendar = yf.Ticker(ticker).calendar
+            return calendar["Earnings Date"][0] if calendar else None
+
+    return await asyncio.to_thread(earnings_date_func)
 
 
 async def get_partial_metainfo_yahoo(ticker: str) -> pd.DataFrame:
@@ -183,21 +186,21 @@ async def get_partial_metainfo_yahoo(ticker: str) -> pd.DataFrame:
         "Ticker": metainfo_yf["symbol"],
         "Full Name": metainfo_yf["longName"],
         "Exchange": metainfo_yf["exchange"],
-        "Summary": metainfo_yf["longBusinessSummary"],
+        "Summary": metainfo_yf.get("longBusinessSummary"),
         "Employees": metainfo_yf.get("fullTimeEmployees"),
         "Dividend Rate": metainfo_yf.get("dividendRate"),
-        "Price to Book": metainfo_yf["priceToBook"],
+        "Price to Book": metainfo_yf.get("priceToBook"),
         "Price to Earning (TTM)": metainfo_yf.get("trailingPE"),
-        "EPS (TTM)": metainfo_yf["trailingEps"],
-        "Market Cap": metainfo_yf["marketCap"],
+        "EPS (TTM)": metainfo_yf.get("trailingEps"),
+        "Market Cap": metainfo_yf.get("marketCap"),
         "Fiftytwo Week Low": metainfo_yf["fiftyTwoWeekLow"],
         "Fiftytwo Week High": metainfo_yf["fiftyTwoWeekHigh"],
-        "Shares Outstanding": metainfo_yf["sharesOutstanding"],
-        "Revenue": metainfo_yf["totalRevenue"],
-        "EBITDA": metainfo_yf["ebitda"],
-        "Gross Margins": metainfo_yf["grossMargins"],
-        "Operating Margins": metainfo_yf["operatingMargins"],
-        "Net Profit Margins": metainfo_yf["profitMargins"],
+        "Shares Outstanding": metainfo_yf.get("sharesOutstanding"),
+        "Revenue": metainfo_yf.get("totalRevenue"),
+        "EBITDA": metainfo_yf.get("ebitda"),
+        "Gross Margins": metainfo_yf.get("grossMargins"),
+        "Operating Margins": metainfo_yf.get("operatingMargins"),
+        "Net Profit Margins": metainfo_yf.get("profitMargins"),
     }
 
     return pd.DataFrame.from_dict(metainfo_dict, orient="index", columns=["Value"])

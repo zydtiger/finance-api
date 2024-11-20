@@ -187,17 +187,15 @@ async def get_tags(ticker: str, type: ResponseType = ResponseType.PLAIN):
 
 @router.get("/metainfo/{ticker}", response_model=StockMetaInfo | str)
 async def get_metainfo(ticker: str, type: ResponseType = ResponseType.PLAIN):
-    try:
-        import pandas as pd
+    import pandas as pd
 
-        df_yahoo = await yahoo.get_partial_metainfo_yahoo(ticker)
-        df_finviz = await finviz.get_partial_metainfo_finviz(ticker)
-        earnings_date = await yahoo.get_earnings_date(ticker)
-
-        df = pd.concat([df_yahoo, df_finviz])
-        df.loc["Earnings Date"] = earnings_date
-    except ElementNotFoundError as e:
-        raise internal_error(e)
+    df_yahoo = await yahoo.get_partial_metainfo_yahoo(ticker)
+    df_finviz = await finviz.get_partial_metainfo_finviz(ticker)
+    earnings_date = await yahoo.get_earnings_date(ticker)
+    earnings_date = pd.DataFrame(
+        [earnings_date], index=["Earnings Date"], columns=["Value"]
+    )
+    df = pd.concat([df_yahoo, df_finviz, earnings_date])
 
     if type is ResponseType.MODEL:
         rename_dict = {
@@ -206,7 +204,8 @@ async def get_metainfo(ticker: str, type: ResponseType = ResponseType.PLAIN):
         }
         df.rename(index=rename_dict, inplace=True)
         df_dict = df.to_dict()["Value"]
-        df_dict["index_participation"] = list(df_dict["index_participation"].split(","))
+        if df_dict["index_participation"] is not None:
+            df_dict["index_participation"] = df_dict["index_participation"].split(",")
         try:
             return StockMetaInfo(**df_dict)
         except ValidationError as e:

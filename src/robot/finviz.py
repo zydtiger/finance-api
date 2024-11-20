@@ -81,13 +81,6 @@ async def get_partial_metainfo_finviz(ticker: str) -> pd.DataFrame:
         pd.DataFrame: pandas DataFrame of partial metainfo
     """
 
-    page = await parse_stock_page(ticker)
-    metainfo_table_elem = page.select_one(".js-snapshot-table")
-    if not metainfo_table_elem:
-        raise ElementNotFoundError("Metainfo table not found")
-
-    metainfo_table_cells = metainfo_table_elem.select("td")
-
     target_labels = {
         "Index": {
             "name": "Index Participation",
@@ -107,13 +100,24 @@ async def get_partial_metainfo_finviz(ticker: str) -> pd.DataFrame:
         },
     }
 
-    metainfo_dict = {}
-    for i in range(0, len(metainfo_table_cells), 2):
-        label = metainfo_table_cells[i].text
-        if label in target_labels:
-            key = target_labels[label]["name"]
-            callback = target_labels[label]["callback"]
-            metainfo_dict[key] = callback(metainfo_table_cells[i + 1].text)
+    metainfo_dict = {target_labels[label]["name"]: None for label in target_labels}
+
+    try:
+        page = await parse_stock_page(ticker)
+        metainfo_table_elem = page.select_one(".js-snapshot-table")
+        if not metainfo_table_elem:
+            raise ElementNotFoundError("Metainfo table not found")
+
+        metainfo_table_cells = metainfo_table_elem.select("td")
+        for i in range(0, len(metainfo_table_cells), 2):
+            label = metainfo_table_cells[i].text
+            if label in target_labels:
+                key = target_labels[label]["name"]
+                callback = target_labels[label]["callback"]
+                metainfo_dict[key] = callback(metainfo_table_cells[i + 1].text)
+
+    except ElementNotFoundError:
+        pass
 
     return pd.DataFrame.from_dict(metainfo_dict, orient="index", columns=["Value"])
 

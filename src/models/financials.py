@@ -53,48 +53,54 @@ class StockMetaInfo(BaseModel):
     # exchange
     exchange: str
     # longBusinessSummary
-    summary: str
+    summary: str | None
     # fullTimeEmployees
     employees: int | None
     # dividendRate
     dividend_rate: float | None = Field(serialization_alias="dividendRate")
     # priceToBook
-    price_to_book: float = Field(serialization_alias="priceToBook")
+    price_to_book: float | None = Field(serialization_alias="priceToBook")
     # trailingPE
     price_to_earning_ttm: float | None = Field(serialization_alias="priceToEarningTTM")
     # trailingEps
-    eps_ttm: float = Field(serialization_alias="epsTTM")
+    eps_ttm: float | None = Field(serialization_alias="epsTTM")
     # marketCap
-    market_cap: int = Field(serialization_alias="marketCap")
+    market_cap: int | None = Field(serialization_alias="marketCap")
     # fiftyTwoWeekLow
     fiftytwo_week_low: float = Field(serialization_alias="fiftytwoWeekLow")
     # fiftyTwoWeekHigh
     fiftytwo_week_high: float = Field(serialization_alias="fiftytwoWeekHigh")
     # sharesOutstanding
-    shares_outstanding: int = Field(serialization_alias="sharesOutstanding")
+    shares_outstanding: int | None = Field(serialization_alias="sharesOutstanding")
     # totalRevenue
-    revenue: int
+    revenue: int | None
     # ebitda
-    ebitda: int
+    ebitda: int | None
     # grossMargins
-    gross_margins: float = Field(serialization_alias="grossMargins")
+    gross_margins: float | None = Field(serialization_alias="grossMargins")
     # operatingMargins
-    operating_margins: float = Field(serialization_alias="operatingMargins")
+    operating_margins: float | None = Field(serialization_alias="operatingMargins")
     # profitMargins
-    net_profit_margins: float = Field(serialization_alias="netProfitMargins")
+    net_profit_margins: float | None = Field(serialization_alias="netProfitMargins")
 
     ## FROM get_calendar (yahoo)
-    earnings_date: datetime = Field(serialization_alias="earningsDate")
+    earnings_date: datetime | None = Field(serialization_alias="earningsDate")
 
     ## FROM finviz
     # Index
-    index_participation: list[str] = Field(serialization_alias="indexParticipation")
+    index_participation: list[str] | None = Field(
+        serialization_alias="indexParticipation"
+    )
     # EPS Y/Y TTM
-    eps_yearly_growth_ttm: float = Field(serialization_alias="epsYearlyGrowthTTM")
+    eps_yearly_growth_ttm: float | None = Field(
+        serialization_alias="epsYearlyGrowthTTM"
+    )
     # EPS Q/Q
-    eps_quarterly_growth_yoy: float = Field(serialization_alias="epsQuarterlyGrowthYoY")
+    eps_quarterly_growth_yoy: float | None = Field(
+        serialization_alias="epsQuarterlyGrowthYoY"
+    )
     # EPS Surprise
-    eps_surprise: float = Field(serialization_alias="epsSurprise")
+    eps_surprise: float | None = Field(serialization_alias="epsSurprise")
 
 
 class NewsRecord(BaseModel):
@@ -107,6 +113,3 @@ class NewsRecord(BaseModel):
     link: str
     publisher: str
     thumb_img_src: str = Field(serialization_alias="thumbImgSrc")
-
-
-# todo: current_price?
