@@ -64,7 +64,7 @@ async def get_tags(ticker: str) -> pd.DataFrame:
         raise ElementNotFoundError("Tags not found")
 
     tag_links = [
-        {"Name": tag.text, "Link": f"{FINVIZ_BASE_URL}{tag.get("href")}"}
+        {"Name": tag.text, "Link": f"{FINVIZ_BASE_URL}{tag.get('href')}"}
         for tag in tags
     ]
     return pd.DataFrame(tag_links)
@@ -84,7 +84,9 @@ async def get_partial_metainfo_finviz(ticker: str) -> pd.DataFrame:
     target_labels = {
         "Index": {
             "name": "Index Participation",
-            "callback": lambda s: ",".join([name.strip() for name in s.split(",")]),
+            "callback": lambda s: ",".join(
+                [name.strip() for name in s.split(",")]
+            ),
         },
         "EPS Y/Y TTM": {
             "name": "EPS Yearly Growth (TTM)",
@@ -100,7 +102,9 @@ async def get_partial_metainfo_finviz(ticker: str) -> pd.DataFrame:
         },
     }
 
-    metainfo_dict = {target_labels[label]["name"]: None for label in target_labels}
+    metainfo_dict = {
+        target_labels[label]["name"]: None for label in target_labels
+    }
 
     try:
         page = await parse_stock_page(ticker)
@@ -119,7 +123,9 @@ async def get_partial_metainfo_finviz(ticker: str) -> pd.DataFrame:
     except ElementNotFoundError:
         pass
 
-    return pd.DataFrame.from_dict(metainfo_dict, orient="index", columns=["Value"])
+    return pd.DataFrame.from_dict(
+        metainfo_dict, orient="index", columns=["Value"]
+    )
 
 
 async def get_news(ticker: str) -> pd.DataFrame:
@@ -174,7 +180,9 @@ async def get_news(ticker: str) -> pd.DataFrame:
     # pad dates
     for i, news in enumerate(news_list):
         if news["Date"][0].isdigit():
-            news["Date"] = f"{news_list[i-1]['Date'].split(' ')[0]} {news['Date']}"
+            news["Date"] = (
+                f"{news_list[i-1]['Date'].split(' ')[0]} {news['Date']}"
+            )
         elif news["Date"].startswith("Today"):
             timezone = pytz.timezone("US/Eastern")
             today_date = datetime.now(timezone).strftime("%b-%d-%y")
